@@ -19,11 +19,15 @@ SET LongDayNames='Monday;Tuesday;Wednesday;Thursday;Friday;Saturday;Sunday';
 SET NumericalAbbreviation='3:k;6:M;9:G;12:T;15:P;18:E;21:Z;24:Y;-3:m;-6:μ;-9:n;-12:p;-15:f;-18:a;-21:z;-24:y';
 
 let current_time = ConvertToLocalTime(utc(now()),'Eastern Time (US & Canada)');
-let exctract_date = date('$(current_time)');
+let extract_date = date('$(current_time)','YYYYMMDD');
 Let extract_time = time(hour('$(current_time)')&':00','hh:mm tt');
+let full_date = Timestamp#('$(extract_date)'&' '&'$(extract_time)','YYYYMMDDhhmmtt');
+let full_date_file = timestamp(Timestamp#('$(extract_date)'&' '&'$(extract_time)','YYYYMMDD hh:mm tt'),'YYYYMMDDhhmmtt');
+let place = 'ROCKHILL';
 
 trace current time is $(current_time);
 trace date and time are $(extract_date)  $(extract_time);
+trace full_date is $(full_date);
 
 LIB CONNECT TO 'weather.com_forecast (auth0_joeeasley@odysseylogistics.com)';
 
@@ -86,52 +90,23 @@ SQL SELECT
 FROM JSON (wrap on) "root" PK "__KEY_root";
 
 [forecasts]:
-LOAD	
-	[class],
-	[expire_time_gmt_u0],
-	[fcst_valid],
+LOAD
+	'$(fulldate)' as ExtractionTimeStamp,
+    '$(place)' as place,
 	[fcst_valid_local],
 	[num],
-	[day_ind],
 	[temp],
-	[dewpt],
-	[hi],
-	[wc],
-	[feels_like],
-	[icon_extd],
-	[wxman],
-	[icon_code],
-	[dow],
-	[phrase_12char],
-	[phrase_22char],
 	[phrase_32char],
-	[subphrase_pt1],
-	[subphrase_pt2],
-	[subphrase_pt3],
 	[pop],
 	[precip_type],
-	[qpf],
-	[snow_qpf],
-	[rh],
-	[wspd],
-	[wdir],
-	[wdir_cardinal],
-	[gust],
-	[clds],
-	[vis],
-	[mslp],
-	[uv_index_raw],
-	[uv_index],
-	[uv_warning],
-	[uv_desc],
-	[golf_index],
-	[golf_category],
-	[severity],
-	[__FK_forecasts] AS [__KEY_root]
+	[wspd]
 RESIDENT RestConnectorMasterTable
 WHERE NOT IsNull([__FK_forecasts]);
 
 DROP TABLE RestConnectorMasterTable;
+
+Store forecasts into [lib://QlikDataOnServer (auth0_joeeasley@odysseylogistics.com)/WEATHER/WEATHER.COM/FORECAST_$(place)_$(full_date_file).qvd](qvd);
+drop table forecasts;
 
 LIB CONNECT TO 'weather.com_current (auth0_joeeasley@odysseylogistics.com)';
 
@@ -185,57 +160,24 @@ SQL SELECT
 	"wxPhraseShort"
 FROM JSON (wrap on) "root";
 
-[root]:
-LOAD	
-	[cloudCeiling],
+[actual]:
+LOAD
+	'$(fulldate)' as ExtractionTimeStamp,
+    '$(place)' as place,
+    1 as order,
 	[cloudCoverPhrase],
-	[dayOfWeek],
-	[dayOrNight],
-	[expirationTimeUtc],
-	[iconCode],
-	[iconCodeExtend],
 	[obsQualifierCode],
 	[obsQualifierSeverity],
 	[precip1Hour],
-	[precip6Hour],
-	[precip24Hour],
-	[pressureAltimeter],
-	[pressureChange],
-	[pressureMeanSeaLevel],
-	[pressureTendencyCode],
-	[pressureTendencyTrend],
-	[relativeHumidity],
 	[snow1Hour],
-	[snow6Hour],
-	[snow24Hour],
-	[sunriseTimeLocal],
-	[sunriseTimeUtc],
-	[sunsetTimeLocal],
-	[sunsetTimeUtc],
 	[temperature],
-	[temperatureChange24Hour],
-	[temperatureDewPoint],
-	[temperatureFeelsLike],
-	[temperatureHeatIndex],
-	[temperatureMax24Hour],
-	[temperatureMaxSince7Am],
-	[temperatureMin24Hour],
-	[temperatureWindChill],
-	[uvDescription],
-	[uvIndex],
-	[validTimeLocal],
-	[validTimeUtc],
-	[visibility],
-	[windDirection],
-	[windDirectionCardinal],
-	[windGust],
 	[windSpeed],
-	[wxPhraseLong],
-	[wxPhraseMedium],
-	[wxPhraseShort]
+	[wxPhraseLong]
 RESIDENT RestConnectorMasterTable;
-
 DROP TABLE RestConnectorMasterTable;
+
+Store actual into [lib://QlikDataOnServer (auth0_joeeasley@odysseylogistics.com)/WEATHER/WEATHER.COM/ACTUAL_$(place)_$(full_date_file).qvd](qvd);
+drop table actual;
 
 
 
