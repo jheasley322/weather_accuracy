@@ -1,0 +1,9 @@
+api.weather.com
+api key is "da328055e2e940d8b28055e2e9e0d851"
+
+/v1/geocode/{latitude}/{longitude}/forecast/hourly/{hours}hour.json
+
+--rock hill
+/v1/geocode/34.9249/81.0251/forecast/hourly/24hour.json
+
+api.weather.com/v1/geocode/34.9249/-81.0251/forecast/hourly/24hour.json
